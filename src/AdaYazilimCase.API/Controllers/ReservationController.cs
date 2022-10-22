@@ -21,7 +21,7 @@ public class ReservationController : ControllerBase
         if (reservation == null)
             return NotFound(reservation);
 
-        int kalanYolcuSayisi = reservation.PersonReservationCount;
+        int remainingPersonCount = reservation.PersonReservationCount;
 
         if (reservation.Train == null || reservation.Train.Carriages == null)
             return NotFound(response);
@@ -29,36 +29,36 @@ public class ReservationController : ControllerBase
         foreach (var item in reservation.Train.Carriages)
         {
             // Vagon'un Yüzde 70 doluluk oranında kaç koltuk kapasitesi olduğunu buluyoruz.
-            int dolulukOrani = (item.Capacity * 70) / 100;
+            int fullnessPercentage = (item.Capacity * 70) / 100;
 
             // Vagon'a kaç kişi yerleşebilir sayısı
-            int vagonKalanKoltukSayisi = dolulukOrani - item.Fullness;
+            int wagonRemainingSeatsCount = fullnessPercentage - item.Fullness;
 
             // Doluluk oranı %70 altında ise işlemler gerçekleşir.
-            if (item.Fullness < dolulukOrani)
+            if (item.Fullness < fullnessPercentage)
             {
                 ReservationWagonSettlement vagon;
                 //  Yolcular farklı vagona yerleşmek istemiyorlarsa ve yeterli yer yoksa sonraki vagona bak ->
-                if (!reservation.AnotherCarriage && vagonKalanKoltukSayisi < kalanYolcuSayisi)
+                if (!reservation.AnotherCarriage && wagonRemainingSeatsCount < remainingPersonCount)
                     continue;
                 // Vagon'un %70'i kalan yolcu sayısından büyük veya eşit olma durumu
-                if (vagonKalanKoltukSayisi >= kalanYolcuSayisi)
+                if (wagonRemainingSeatsCount >= remainingPersonCount)
                 {
                     vagon = new ReservationWagonSettlement()
                     {
-                        PersonCount = kalanYolcuSayisi,
+                        PersonCount = remainingPersonCount,
                         WagonName = item.Name
                     };
                     response.ReservationWagonSettlements.Add(vagon);
-                    return Ok(response);
+                    break;
                 }
                 // Vagon'un %70'i kalan yolcu sayısından büyük veya eşit olmama durumu
                 else
                 {
-                    kalanYolcuSayisi = kalanYolcuSayisi - vagonKalanKoltukSayisi;
+                    remainingPersonCount = remainingPersonCount - wagonRemainingSeatsCount;
                     vagon = new ReservationWagonSettlement()
                     {
-                        PersonCount = vagonKalanKoltukSayisi,
+                        PersonCount = wagonRemainingSeatsCount,
                         WagonName = item.Name
                     };
                     response.ReservationWagonSettlements.Add(vagon);
@@ -70,7 +70,7 @@ public class ReservationController : ControllerBase
                 continue;
 
         }
-        if (kalanYolcuSayisi > 0)
+        if (remainingPersonCount > 0)
         {
             response.ReservationWagonSettlements.Clear();
             return NotFound(response);
