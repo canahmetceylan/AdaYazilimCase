@@ -16,7 +16,7 @@ public class ReservationController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Reservation(ReservationRequestModel reservation)
+    public IActionResult Reservation([FromBody]ReservationRequestModel reservation)
     {
         ReservationResponseModel response = new ReservationResponseModel();
 
