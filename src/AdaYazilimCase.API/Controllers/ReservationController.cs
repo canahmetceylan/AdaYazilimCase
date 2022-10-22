@@ -8,9 +8,11 @@ namespace AdaYazilimCase.API.Controllers;
 [ApiController]
 public class ReservationController : ControllerBase
 {
-    public ReservationController()
-    {
+    private readonly ILogger<ReservationController> _logger;
 
+    public ReservationController(ILogger<ReservationController> logger)
+    {
+        _logger = logger;
     }
 
     [HttpPost]
